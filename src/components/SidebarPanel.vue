@@ -37,6 +37,7 @@
         </div>
       </BAccordionItem>
       <BAccordionItem id="emblems" :title="$t('emblems')">
+        <p class="text-emblem-usage font-weight-lighter text-secondary">{{$t('emblem_usage_hint')}}</p>
         <div class="emblems-section">
           <div class="category-select-row">
             <label for="category-select">{{ $t('category') }}:</label>
@@ -294,7 +295,14 @@ watch(selectedPatternIndex, (i) => {
   margin-right: 8px;
 }
 
-/* Supprime la bordure bleue sur l'item sélectionné de l'accordéon */
+.text-emblem-usage {
+  margin-bottom: 0;
+  font-style: italic;
+  font-size: 14px;
+  padding-left: 12px;
+}
+
+/* Supprime la bordure bleue sur l'item sélectionné de l'accordion */
 :deep(.accordion-button:focus),
 :deep(.accordion-button:not(.collapsed)) {
   box-shadow: none !important;

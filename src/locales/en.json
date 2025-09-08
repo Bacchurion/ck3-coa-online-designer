@@ -61,5 +61,6 @@
   "stretched_rotated_warning": "This emblem is both stretched and rotated. CK3 does not handle those very well You can fix this in the advanced controls.",
   "reset_stretch": "Reset stretch",
   "reset_rotation": "Reset rotation",
-  "export_warning_stretched_rotated": "Warning: at least one emblem is stretched and rotated; As CK3 does not handle this case well, the result may differ in-game."
+  "export_warning_stretched_rotated": "Warning: at least one emblem is stretched and rotated; As CK3 does not handle this case well, the result may differ in-game.",
+  "emblem_usage_hint": "Drag & Drop emblems directly into the canvas"
 }

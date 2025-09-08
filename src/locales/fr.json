@@ -61,5 +61,6 @@
   "stretched_rotated_warning": "Cet emblème est à la fois étiré et tourné. CK3 ne gère pas très bien ce cas de figure. Vous pouvez corriger cela dans les contrôles avancés.",
   "reset_stretch": "Réinitialiser l'étirement",
   "reset_rotation": "Réinitialiser la rotation",
-  "export_warning_stretched_rotated": "Attention : au moins un emblème est étiré et tourné ; CK3 gérant mal ce cas le rendu peut différer en jeu."
+  "export_warning_stretched_rotated": "Attention : au moins un emblème est étiré et tourné ; CK3 gérant mal ce cas le rendu peut différer en jeu.",
+  "emblem_usage_hint": "Glissez-déposez les emblèmes directement sur le canevas"
 }
