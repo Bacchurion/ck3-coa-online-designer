@@ -199,7 +199,7 @@ import PreviewCanvas from './components/PreviewCanvas.vue'
 import ImportData from './components/ImportData.vue'
 import emblemsData from './assets/emblems.json'
 import Konva from 'konva'
-
+import { namedColors } from '@/utils/colors'
 // Lower rendering resolution on HiDPI to speed up draws
 Konva.pixelRatio = 1
 
@@ -240,7 +240,7 @@ const originalPatternUrl = ref(null)
 const selectedPatternFileName = ref(null)
 
 // Valeurs par défaut pour les colorpickers du pattern
-const defaultPatternColors = ['#2a5d8c', '#ffad33', '#336638']
+const defaultPatternColors = [namedColors.blue_light, namedColors.yellow_light, namedColors.green_light]
 const patternColors = ref([...defaultPatternColors])
 
 // Stocke les couleurs courantes pour chaque section

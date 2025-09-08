@@ -14,18 +14,18 @@ export function rgbToHex(r, g, b) {
 }
 
 export const namedColors = {
-  red: "#73472e",
-  blue: "#293e66",
-  yellow: "#a8964c",
-  green: "#4d7a4d",
-  black: "#191a19",
-  white: "#cccccc",
-  purple: "#6e2d72",
-  orange: "#996c00",
+  red: "#732217",
+  blue: "#143F66",
+  yellow: "#BF8630",
+  green: "#1F4D23",
+  black: "#1A1713",
+  white: "#CCCAC8",
+  purple: "#591B40",
+  orange: "#993A00",
   grey: "#808080",
-  brown: "#6d492e",
-  blue_light: "#476b8f",
-  green_light: "#668066",
-  yellow_light: "#ffcc33"
+  brown: "#733C1E",
+  blue_light: "#2A5D8C",
+  green_light: "#336638",
+  yellow_light: "#FFAD33"
 };
 

@@ -73,6 +73,7 @@ import { BAccordion, BAccordionItem } from 'bootstrap-vue-next'
 import emblemsData from '../assets/emblems.json'
 import patternsInfo from '../assets/patterns.json'
 import CustomColorPicker from './CustomColorPicker.vue'
+import { namedColors } from '@/utils/colors'
 
 const props = defineProps({
   canvasImages: Array,
@@ -85,7 +86,7 @@ const props = defineProps({
 const patternColors = ref(
   Array.isArray(props.patternColors) && props.patternColors.length >= 3
     ? [...props.patternColors]
-    : ['#732217', '#cccac8', '#1f4c23']
+    : [namedColors.blue_light, namedColors.yellow_light, namedColors.green_light]
 )
 const defaultPatternColors = patternColors.value
 

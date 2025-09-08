@@ -34,9 +34,10 @@
   </div>
 </template>
 
-<script setup lang="ts">
+<script setup>
 import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
 import { SketchPicker } from 'vue-color'
+import { namedColors } from '@/utils/colors'
 
 const props = defineProps({
   modelValue: { type: String, default: '#68CCCA' },
@@ -45,11 +46,7 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue'])
 
 const showPicker = ref(false)
-const presets = [
-  "#732217", "#143F66", "#BF8630", "#1F4C23", "#1A1713",
-  "#CCCAC8", "#591B40", "#993B00", "#808080", "#733C1E",
-  "#2A5D8C", "#336638", "#FFAD33"
-]
+const presets = Object.values(namedColors)
 
 // Met à jour la couleur si la prop change et le picker est fermé
 watch(() => props.defaultColor, (val) => {
