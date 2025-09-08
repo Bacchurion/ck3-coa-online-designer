@@ -186,11 +186,11 @@
 import { ref, onMounted, watch, nextTick } from 'vue'
 
 // Utilise les chemins du dossier public
-const housePng = '/coat_of_arms/interface/house.png'
-const houseMaskPng = '/coat_of_arms/interface/house_mask.png'
-const titlePng = '/coat_of_arms/interface/title.png'
-const titleMaskPng = '/coat_of_arms/interface/title_mask.png'
-const topFramePng = '/coat_of_arms/interface/topframe.png'
+const housePng = import.meta.env.BASE_URL + 'coat_of_arms/interface/house.png'
+const houseMaskPng = import.meta.env.BASE_URL + 'coat_of_arms/interface/house_mask.png'
+const titlePng = import.meta.env.BASE_URL + 'coat_of_arms/interface/title.png'
+const titleMaskPng = import.meta.env.BASE_URL + 'coat_of_arms/interface/title_mask.png'
+const topFramePng = import.meta.env.BASE_URL + 'coat_of_arms/interface/topframe.png'
 
 const props = defineProps({
   canvasSize: Object,
@@ -294,14 +294,14 @@ onMounted(() => {
   maskTypes.forEach((maskType) => {
     // Masks
     const img = new window.Image()
-    img.src = `/coat_of_arms/interface/${maskType}_mask.png`
+    img.src = import.meta.env.BASE_URL + `coat_of_arms/interface/${maskType}_mask.png`
     img.onload = () => {
       maskImages.value[maskType] = img
       updateCurrentMask()
     }
     // Shadows
     const shadowImg = new window.Image()
-    shadowImg.src = `/coat_of_arms/interface/${maskType}_shadow.png`
+    shadowImg.src = import.meta.env.BASE_URL + `coat_of_arms/interface/${maskType}_shadow.png`
     shadowImg.onload = () => {
       shadowImages.value[maskType] = shadowImg
       updateCurrentMask()

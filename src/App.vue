@@ -1095,7 +1095,7 @@ function handleImportData({ patternFileName, patternColors: pColors, emblems }) 
   let patternPromise = Promise.resolve(null)
   if (patternFileName) {
     patternPromise = new Promise(resolve => {
-      const patUrl = `/coat_of_arms/patterns/${patternFileName}`
+      const patUrl = import.meta.env.BASE_URL + `coat_of_arms/patterns/${patternFileName}`
       const patImg = new window.Image()
       patImg.src = patUrl
       patImg.onload = () => resolve(patImg)
@@ -1105,7 +1105,7 @@ function handleImportData({ patternFileName, patternColors: pColors, emblems }) 
 
   const emblemsToLoad = emblems || []
   const emblemPromises = emblemsToLoad.map(e => new Promise(resolve => {
-    const baseUrl = `/coat_of_arms/colored_emblems/${e.filename}`
+    const baseUrl = import.meta.env.BASE_URL + `coat_of_arms/colored_emblems/${e.filename}`
     const baseEl = new window.Image()
     baseEl.src = baseUrl
     baseEl.onload = () => resolve({ baseEl, e })

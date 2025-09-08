@@ -194,7 +194,7 @@ const emit = defineEmits([
 ])
 
 onMounted(() => {
-  const emblemsBaseUrl = '/coat_of_arms/colored_emblems/'
+  const emblemsBaseUrl = import.meta.env.BASE_URL + 'coat_of_arms/colored_emblems/'
   const arr = Object.keys(emblemsData).map((filename) => {
     return {
       filename,
@@ -210,7 +210,7 @@ onMounted(() => {
   selectedCategory.value = categories.value[0] || '<None>'
   updateFilteredImages()
 
-  const patternsBaseUrl = '/coat_of_arms/patterns/'
+  const patternsBaseUrl = import.meta.env.BASE_URL + 'coat_of_arms/patterns/'
   const patternArr = Object.keys(patternsInfo).map((filename) => {
     return {
       filename,
