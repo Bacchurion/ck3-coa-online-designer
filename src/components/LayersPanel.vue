@@ -131,7 +131,7 @@
               <n-input-number
                 class="inline-input-number col-3"
                 :value="Math.round(layerPos[img.id].x)"
-                :min="-500"
+                :min="-1000"
                 :max="1000"
                 :step="1"
                 size="small"
@@ -142,7 +142,7 @@
               <n-input-number
                 class="inline-input-number col-3"
                 :value="Math.round(layerPos[img.id].y)"
-                :min="-500"
+                :min="-1000"
                 :max="1000"
                 :step="1"
                 size="small"
@@ -156,8 +156,8 @@
               <n-input-number
                 class="inline-input-number col-3"
                 :value="Math.round(layerStretch[img.id].x)"
-                :min="-500"
-                :max="500"
+                :min="1"
+                :max="1000"
                 :step="1"
                 size="small"
                 button-placement="both"
@@ -168,7 +168,7 @@
                 class="inline-input-number col-3"
                 :value="Math.round(layerStretch[img.id].y)"
                 :min="1"
-                :max="500"
+                :max="1000"
                 :step="1"
                 size="small"
                 button-placement="both"
