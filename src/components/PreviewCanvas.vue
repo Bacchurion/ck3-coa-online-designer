@@ -110,13 +110,20 @@
         >
           <option value="default">{{ $t('government_default') }}</option>
           <option value="administrative">{{ $t('government_administrative') }}</option>
+          <option value="celestial">{{ $t('government_celestial') }}</option>
           <option value="clan">{{ $t('government_clan') }}</option>
           <option value="herder">{{ $t('government_herder') }}</option>
+          <option value="japan_administrative">{{ $t('government_japan_administrative') }}</option>
+          <option value="japan_feudal">{{ $t('government_japan_feudal') }}</option>
           <option value="landless">{{ $t('government_landless') }}</option>
+          <option value="mandala">{{ $t('government_mandala') }}</option>
+          <option value="meritocratic">{{ $t('government_meritocratic') }}</option>
           <option value="nomad">{{ $t('government_nomad') }}</option>
           <option value="republic">{{ $t('government_republic') }}</option>
           <option value="theocracy">{{ $t('government_theocracy') }}</option>
           <option value="tribal">{{ $t('government_tribal') }}</option>
+          <option value="steppe_admin">{{ $t('government_steppe_admin') }}</option>
+          <option value="wanua">{{ $t('government_wanua') }}</option>
         </select>
       </div>
     </div>
@@ -135,8 +142,8 @@
             <v-group
               ref="coaGroup"
               :config="{
-                x: (defaultWidth - defaultCoatWidth) / 2,
-                y: (defaultHeight - defaultCoatHeight) / 2,
+                x: 0,
+                y: 0,
                 width: defaultCoatWidth,
                 height: defaultCoatHeight,
                 listening: false
@@ -170,7 +177,7 @@
               v-if="topFrameImage"
               :config="{
                 x: 0,
-                y: 0,
+                y: -10,
                 image: topFrameImage,
                 listening: false,
               }"
@@ -205,9 +212,9 @@ const titleWidth = 96
 const titleHeight = 96
 const titleCoatSize = 85
 
-const defaultWidth = 116
+const defaultWidth = 128
 const defaultHeight = 128
-const defaultCoatWidth = 116
+const defaultCoatWidth = 128
 const defaultCoatHeight = 128
 
 const selectedMask = ref('default')
@@ -290,7 +297,23 @@ onMounted(() => {
   imgTitleMask.onload = () => (titleMaskImage.value = imgTitleMask)
 
   // Dynamic loading
-  const maskTypes = ['default', 'administrative', 'clan', 'herder', 'landless', 'nomad', 'republic', 'theocracy', 'tribal']
+  const maskTypes = ['default',
+    'administrative',
+    'celestial',
+    'clan',
+    'herder',
+    'japan_administrative',
+    'japan_feudal',
+    'landless',
+    'mandala',
+    'meritocratic',
+    'nomad',
+    'republic',
+    'theocracy',
+    'tribal',
+    'steppe_admin',
+    'wanua']
+
   maskTypes.forEach((maskType) => {
     // Masks
     const img = new window.Image()
