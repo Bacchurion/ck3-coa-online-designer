@@ -148,6 +148,7 @@
         <PreviewCanvas
           :preview-image="miniatureImage"
           :canvas-size="stageSize"
+          :patternColors="patternColors"
         />
       </div>
       <div class="col-4 sidebar-right">

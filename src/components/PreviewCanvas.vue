@@ -139,14 +139,29 @@
                 listening: false
               }"
             >
-              <v-image
-                v-if="previewImg"
+              <!-- We define a background, so if the offseting/scaling doesn't fill the mask
+               completely (ex: meritocratic khanate) at least a color is shown
+               CK3 seems to use the same hacky thing -->
+              <v-rect
                 :config="{
-                  image: previewImg,
                   x: 0,
                   y: 0,
                   width: defaultCoatWidth,
                   height: defaultCoatHeight,
+                  fill: props.patternColors?.[0]|| 'black',
+                  listening: false
+                }"
+              />
+
+              <!-- Preview of the coat of arms -->
+              <v-image
+                v-if="previewImg"
+                :config="{
+                  image: previewImg,
+                  x: selectedGovernment.x,
+                  y: selectedGovernment.y,
+                  width: selectedGovernment.width,
+                  height: selectedGovernment.height,
                   listening: false
                 }"
               />
@@ -180,7 +195,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch, nextTick } from 'vue'
+import { ref, onMounted, watch, nextTick, computed } from 'vue'
 import VueSelect from "vue3-select-component";
 import "vue3-select-component/styles";
 
@@ -195,7 +210,8 @@ const governmentIconPathBase = baseURL + 'interface/government/'
 
 const props = defineProps({
   canvasSize: Object,
-  previewImage: String // DataURL string
+  previewImage: String,
+  patternColors: Object
 })
 
 const houseWidth = 153
@@ -212,22 +228,22 @@ const defaultCoatWidth = 128
 const defaultCoatHeight = 128
 
 const governmentList = ref([
-    {value: 'default', icon: governmentIconPathBase + 'feudal.png'},
-    {value: 'administrative', icon: governmentIconPathBase + 'administrative.png'},
-    {value: 'celestial', icon: governmentIconPathBase + 'celestial.png'},
-    {value: 'clan', icon: governmentIconPathBase + 'clan.png'},
-    {value: 'herder', icon: governmentIconPathBase + 'herder.png'},
-    {value: 'japan_administrative', icon: governmentIconPathBase + 'japan_administrative.png'},
-    {value: 'japan_feudal', icon: governmentIconPathBase + 'japan_feudal.png'},
+    {value: 'default', icon: governmentIconPathBase + 'feudal.png', offset: [0, -0.01]},
+    {value: 'administrative', icon: governmentIconPathBase + 'administrative.png', offset: [0, -0.01]},
+    {value: 'celestial', icon: governmentIconPathBase + 'celestial.png', offset: [0, -0.01], scale: [0.94, 0.94]},
+    {value: 'clan', icon: governmentIconPathBase + 'clan.png', offset: [0, -0.03]},
+    {value: 'herder', icon: governmentIconPathBase + 'herder.png', offset: [0, -0.12], scale: [0.8, 0.8]},
+    {value: 'japan_administrative', icon: governmentIconPathBase + 'japan_administrative.png', offset: [-0.02, -0.072], scale: [0.88, 0.88]},
+    {value: 'japan_feudal', icon: governmentIconPathBase + 'japan_feudal.png', offset: [0, -0.075], scale: [0.95, 0.95]},
     {value: 'landless', icon: governmentIconPathBase + 'landless_adventurer.png'},
-    {value: 'mandala', icon: governmentIconPathBase + 'mandala.png'},
-    {value: 'meritocratic', icon: governmentIconPathBase + 'meritocratic.png'},
-    {value: 'nomad', icon: governmentIconPathBase + 'nomad.png'},
-    {value: 'republic', icon: governmentIconPathBase + 'republic.png'},
-    {value: 'theocracy', icon: governmentIconPathBase + 'theocracy.png'},
-    {value: 'tribal', icon: governmentIconPathBase + 'tribal.png'},
-    {value: 'steppe_admin', icon: governmentIconPathBase + 'steppe_admin.png'},
-    {value: 'wanua', icon: governmentIconPathBase + 'wanua.png'}
+    {value: 'mandala', icon: governmentIconPathBase + 'mandala.png', offset: [0, -0.05], scale: [0.92, 0.92]},
+    {value: 'meritocratic', icon: governmentIconPathBase + 'meritocratic.png', offset: [0, -0.12], scale: [0.92, 0.92]},
+    {value: 'nomad', icon: governmentIconPathBase + 'nomad.png', offset: [0, -0.12], scale: [0.8, 0.8]},
+    {value: 'republic', icon: governmentIconPathBase + 'republic.png', offset: [0, 0.01]},
+    {value: 'theocracy', icon: governmentIconPathBase + 'theocracy.png', offset: [0, -0.02], scale: [0.95, 0.95]},
+    {value: 'tribal', icon: governmentIconPathBase + 'tribal.png', scale: [0.96, 0.96]},
+    {value: 'steppe_admin', icon: governmentIconPathBase + 'steppe_admin.png', offset: [0, -0.2], scale: [0.78, 0.78]},
+    {value: 'wanua', icon: governmentIconPathBase + 'wanua.png', offset: [0, -0.09], scale: [0.9, 0.9]}
 ]);
 
 const selectedMask = ref('default')
@@ -331,6 +347,19 @@ onMounted(() => {
   const imgTopFrame = new window.Image()
   imgTopFrame.src = topFramePng
   imgTopFrame.onload = () => (topFrameImage.value = imgTopFrame)
+})
+
+const selectedGovernment = computed(() => {
+  var gov = governmentList.value.find(g => g.value === selectedMask.value);
+  var width = defaultCoatWidth * (gov.scale?.[0] || 1);
+  var height = defaultCoatHeight * (gov.scale?.[1] || 1);
+
+  return {
+    x: (defaultCoatWidth - width)/2 + (width * (gov.offset?.[0] || 0)),
+    y: (defaultCoatHeight - height)/2 + (height * (gov.offset?.[1] || 0)),
+    width: width,
+    height: height
+  }
 })
 </script>
 
