@@ -1223,20 +1223,19 @@ function confirmResetEmblem() {
   }
 }
 
+// Clone emblem by copy-pasting
 function pasteCopiedImageWithPerf() {
   if (!copiedImage) return
 
   const src = copiedImage
-  const offset = 12
 
-  // Clone emblem (no perf metrics)
   const clone = {
     ...src,
     id: Date.now() + Math.random(),
-    x: (src.x ?? 0) + offset,
-    y: (src.y ?? 0) + offset,
-    centerX: (src.x ?? 0) + offset,
-    centerY: (src.y ?? 0) + offset,
+    x: (src.x ?? 0),
+    y: (src.y ?? 0),
+    centerX: (src.x ?? 0),
+    centerY: (src.y ?? 0),
     rotation: src.rotation || 0,
     width: src.width,
     height: src.height,
