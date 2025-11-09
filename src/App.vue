@@ -1090,17 +1090,17 @@ function handleImportData({ patternFileName, patternColors: pColors, emblems }) 
       const patImg = new window.Image()
       patImg.src = patUrl
       patImg.onload = () => resolve(patImg)
-      if (patImg.complete) resolve(patImg)
-      else {
+      patImg.onerror = () => {
         notify({
           title: $t('import_error_title'),
           text: $t('import_error_text') + ' ' + $t('import_error_pattern_not_found', [patternFileName]),
           type: "error",
-          duration: 5000
-        })
-        isImporting.value = false;
-        return;
-      }
+        duration: 5000
+      })
+      isImporting.value = false;
+      resolve(null)
+    }
+      if (patImg.complete) resolve(patImg)
     })
   }
 
@@ -1110,17 +1110,17 @@ function handleImportData({ patternFileName, patternColors: pColors, emblems }) 
     const baseEl = new window.Image()
     baseEl.src = baseUrl
     baseEl.onload = () => resolve({ baseEl, e })
-    if (baseEl.complete) resolve({ baseEl, e })
-    else {
+    baseEl.onerror = () => {
       notify({
-          title: $t('import_error_title'),
-          text: $t('import_error_text') + ' ' + $t('import_error_emblem_not_found', [e.filename]),
-          type: "error",
-          duration: 5000
-        })
+        title: $t('import_error_title'),
+        text: $t('import_error_text') + ' ' + $t('import_error_emblem_not_found', [e.filename]),
+        type: "error",
+        duration: 5000
+      })
       isImporting.value = false;
-      return;
+      resolve(null)
     }
+    if (baseEl.complete) resolve({ baseEl, e })
   }))
 
   Promise.all([patternPromise, ...emblemPromises]).then(async results => {
