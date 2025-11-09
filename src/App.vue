@@ -202,6 +202,8 @@ import ImportData from './components/ImportData.vue'
 import emblemsData from './assets/emblems.json'
 import Konva from 'konva'
 import { namedColors } from '@/utils/colors'
+import { notify } from "@kyvg/vue3-notification"
+const { t: $t } = useI18n()
 // Lower rendering resolution on HiDPI to speed up draws
 Konva.pixelRatio = 1
 
@@ -1089,6 +1091,16 @@ function handleImportData({ patternFileName, patternColors: pColors, emblems }) 
       patImg.src = patUrl
       patImg.onload = () => resolve(patImg)
       if (patImg.complete) resolve(patImg)
+      else {
+        notify({
+          title: $t('import_error_title'),
+          text: $t('import_error_text') + ' ' + $t('import_error_pattern_not_found', [patternFileName]),
+          type: "error",
+          duration: 5000
+        })
+        isImporting.value = false;
+        return;
+      }
     })
   }
 
@@ -1099,6 +1111,16 @@ function handleImportData({ patternFileName, patternColors: pColors, emblems }) 
     baseEl.src = baseUrl
     baseEl.onload = () => resolve({ baseEl, e })
     if (baseEl.complete) resolve({ baseEl, e })
+    else {
+      notify({
+          title: $t('import_error_title'),
+          text: $t('import_error_text') + ' ' + $t('import_error_emblem_not_found', [e.filename]),
+          type: "error",
+          duration: 5000
+        })
+      isImporting.value = false;
+      return;
+    }
   }))
 
   Promise.all([patternPromise, ...emblemPromises]).then(async results => {

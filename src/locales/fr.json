@@ -66,6 +66,8 @@
   "copy_success_text": "Vous pouvez maintenant coller ce code dans votre jeu.",
   "import_error_title": "Erreur d'import",
   "import_error_text": "Impossible d'importer les données :",
+  "import_error_pattern_not_found": "Le pattern {0} n'existe pas.",
+  "import_error_emblem_not_found": "L'emblème {0} n'existe pas.",
   "import_loading": "Import en cours...",
   "stretched_rotated_warning": "Cet emblème est à la fois étiré et tourné. CK3 ne gère pas très bien ce cas de figure. Vous pouvez corriger cela dans les contrôles avancés.",
   "reset_stretch": "Réinitialiser l'étirement",

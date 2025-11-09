@@ -66,6 +66,8 @@
   "copy_success_text": "You can now paste this code into your game",
   "import_error_title": "Import error",
   "import_error_text": "Unable to import data:",
+  "import_error_pattern_not_found": "Pattern {0} does not exist.",
+  "import_error_emblem_not_found": "Emblem {0} does not exist.",
   "import_loading": "Importing...",
   "stretched_rotated_warning": "This emblem is both stretched and rotated. CK3 does not handle those very well You can fix this in the advanced controls.",
   "reset_stretch": "Reset stretch",
