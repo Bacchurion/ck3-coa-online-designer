@@ -1327,7 +1327,6 @@ function isTransformerTarget(konvaTarget) {
 .sidebar-left {
   border-right: 1px solid #ccc;
   padding: 10px;
-  height: 100vh;
   overflow-y: auto;
 }
 .sidebar-right {

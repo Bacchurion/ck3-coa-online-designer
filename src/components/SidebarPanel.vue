@@ -37,8 +37,8 @@
         </div>
       </BAccordionItem>
       <BAccordionItem id="emblems" :title="$t('emblems')">
-        <p class="text-emblem-usage font-weight-lighter text-secondary">{{$t('emblem_usage_hint')}}</p>
         <div class="emblems-section">
+          <p class="text-emblem-usage font-weight-lighter text-secondary">{{$t('emblem_usage_hint')}}</p>
           <div class="category-select-row">
             <label for="category-select">{{ $t('category') }}:</label>
             <select
@@ -49,7 +49,7 @@
               <option v-for="cat in categories" :key="cat" :value="cat">{{ $t('category_' + cat) }}</option>
             </select>
           </div>
-          <div class="emblems-row">
+          <div class="emblems-row-scroll">
             <div
               v-for="img in filteredImages"
               :key="img.filename"
@@ -277,13 +277,47 @@ watch(selectedPatternIndex, (i) => {
 
 <style scoped>
 .sidebar-panel {
-  overflow-x: hidden;
+  box-sizing: border-box;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 .sidebar-accordion {
-  margin-left: 12px;
+  margin: 0;
+  min-height: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.emblems-section {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1 1 0%;
+}
+
+.sidebar-accordion {
+  margin: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.pattern-section,
+.emblems-section {
+  flex: 1 1 0%;
+  min-height: 0;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
 }
 .pattern-section {
   padding: 12px;
+  flex: 1 1 0%;
+  min-height: 0;
+  overflow-y: auto;
 }
 .color-pickers-row {
   display: flex;
@@ -319,8 +353,10 @@ watch(selectedPatternIndex, (i) => {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin-bottom: 12px;
+  padding-bottom: 12px;
   justify-content: flex-start;
+  max-height: 40vh;
+  overflow-y: auto;
 }
 .pattern-thumb {
   width: 64px;
@@ -340,17 +376,26 @@ watch(selectedPatternIndex, (i) => {
 }
 .emblems-section {
   padding: 12px;
+  flex: 1 1 0%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.emblems-section > .text-emblem-usage,
+.emblems-section > .category-select-row {
+  flex: 0 0 auto;
 }
 .category-select-row {
   margin-bottom: 16px;
   display: block;
 }
-.emblems-row {
+.emblems-row-scroll {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
   justify-content: flex-start;
-  max-height: 80vh;
+  padding-bottom: 4px;
+  max-height: 70vh;
   overflow-y: auto;
 }
 .emblem-thumb {
@@ -367,5 +412,12 @@ watch(selectedPatternIndex, (i) => {
   width: 100%;
   height: 100%;
   object-fit: contain;
+}
+
+:global(.accordion-collapse),
+:global(.collapse) {
+  min-height: 0 !important;
+  display: flex;
+  flex-direction: column;
 }
 </style>
