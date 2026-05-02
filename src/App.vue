@@ -28,123 +28,26 @@
         />
       </div>
       <div class="col-4 canvas-center d-flex flex-column align-items-center justify-content-center">
-
-        <!-- Toolbar -->
-        <div class="toolbar-row">
-          <ExportData
-            :patternFileName="selectedPatternFileName"
-            :patternColors="patternColors"
-            :emblems="canvasImages"
-            :canvas-size="stageSize"
-          />
-          <ImportData
-            :canvas-size="stageSize"
-            @import-data="handleImportData"
-          />
-          <!-- Reset button -->
-          <button
-            @click="showResetModal = true"
-            class="btn btn-outline-danger"
-            title="Réinitialiser l'emblème"
-          >
-            <i class="bi bi-arrow-counterclockwise icon-left-gap"></i>
-            {{ $t('reset_emblem') }}
-          </button>
-          <!-- Language switcher -->
-          <div class="lang-switcher">
-            <button
-              class="btn btn-outline-info"
-              @click="showLangMenu = !showLangMenu"
-              title="Change language"
-            >
-              <span class="lang-flag">{{ getFlag(locale) }}</span>
-            </button>
-            <div v-if="showLangMenu" class="lang-menu">
-              <button
-                v-for="l in filteredLanguages"
-                :key="l.code"
-                class="lang-menu-item"
-                @click="locale = l.code; showLangMenu = false"
-                :title="l.label"
-              >
-                <span class="lang-flag">{{ l.flag }}</span>
-                <span class="lang-label">{{ l.label }}</span>
-              </button>
-            </div>
-          </div>
-        </div>
-        <div class="canvas-box d-flex align-items-center justify-content-center"
-             @dragover.prevent="onCanvasDragOver"
-             @drop="handleSidebarDrop">
-          <v-stage ref="stageRef" :config="stageSize"
-                   @mousedown="onStageMouseDown"
-                   @mousemove="onStageMouseMove"
-                   @mouseup="onStageMouseUp">
-            <!-- pattern layer -->
-            <v-layer ref="patternLayerRef" :config="{ listening: false, hitGraphEnabled: false }">
-              <v-image
-                v-if="selectedPatternEl"
-                :config="{
-                  x: 0,
-                  y: 0,
-                  image: selectedPatternEl,
-                  width: canvasSize,
-                  height: canvasSize,
-                  listening: false,
-                }"
-              />
-            </v-layer>
-
-            <!-- images layer -->
-            <v-layer ref="layerRef" :config="{ listening: false, hitGraphEnabled: false }">
-              <v-image
-                v-for="({ img, idx }) in renderList"
-                :key="img.id"
-                :id="img.id.toString()"
-                :x="img.x"
-                :y="img.y"
-                :image="img.el"
-                :width="img.width"
-                :height="img.height"
-                :rotation="img.rotation"
-                :offsetX="img.width / 2"
-                :offsetY="img.height / 2"
-                :scaleX="img.scaleX ?? 1"
-                :scaleY="img.scaleY ?? 1"
-                :listening="false"
-                :perfectDrawEnabled="false"
-                :shadowForStrokeEnabled="false"
-                @transformend="onTransformEnd(idx, $event)"
-                :ref="(el) => setImageRef(idx, el)"
-                @dragend="onImageDragEnd(idx, $event)"
-              />
-            </v-layer>
-
-            <!-- UI layer for transformer -->
-            <v-layer ref="uiLayerRef">
-              <v-transformer
-                v-if="selectedIndex !== null && imageRefs[selectedIndex]"
-                ref="transformerRef"
-                :config="{
-                  nodes: [imageRefs[selectedIndex].getNode()],
-                  rotateEnabled: true,
-                  resizeEnabled: true,
-                  enabledAnchors: [
-                    'top-left',
-                    'top-center',
-                    'top-right',
-                    'middle-right',
-                    'middle-left',
-                    'bottom-left',
-                    'bottom-center',
-                    'bottom-right',
-                  ],
-                  boundBoxFunc: limitBox,
-                }"
-              />
-            </v-layer>
-          </v-stage>
-        </div>
+        <CanvasToolbar
+          :pattern-file-name="selectedPatternFileName"
+          :pattern-colors="patternColors"
+          :emblems="canvasImages"
+          :canvas-size="stageSize"
+          @import-data="handleImportData"
+          @reset-emblem="showResetModal = true"
+        />
+        <MainCanvas
+          ref="mainCanvasRef"
+          :canvas-images="canvasImages"
+          :canvas-size="canvasSize"
+          :selected-index="selectedIndex"
+          :selected-pattern-el="selectedPatternEl"
+          :stage-size="stageSize"
+          @update:selected-index="selectedIndex = $event"
+          @drop="handleSidebarDrop"
+          @transform-end="handleCanvasTransformEnd"
+          @drag-end="handleCanvasDragEnd"
+        />
         <!-- Non-interactive Preview -->
         <PreviewCanvas
           :preview-image="miniatureImage"
@@ -195,10 +98,10 @@
 import { ref, onMounted, onUnmounted, nextTick, computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import SidebarPanel from './components/SidebarPanel.vue'
-import ExportData from './components/ExportData.vue'
+import CanvasToolbar from './components/CanvasToolbar.vue'
+import MainCanvas from './components/MainCanvas.vue'
 import LayersPanel from './components/LayersPanel.vue'
 import PreviewCanvas from './components/PreviewCanvas.vue'
-import ImportData from './components/ImportData.vue'
 import emblemsData from './assets/emblems.json'
 import Konva from 'konva'
 import { namedColors } from '@/utils/colors'
@@ -211,27 +114,9 @@ const canvasImages = ref([]) // [{...}]
 const canvasSize = ref(400)
 const stageSize = { width: canvasSize.value, height: canvasSize.value }
 const selectedIndex = ref(null)
-const imageRefs = ref([])
 const selectedPatternEl = ref(null)
 const draggedLayerIndex = ref(null)
-const stageRef = ref(null)
-const layerRef = ref(null)
-const patternLayerRef = ref(null)
-const uiLayerRef = ref(null)
-const transformerRef = ref(null)
-const showLangMenu = ref(false)
-
-const languages = ref([
-  { code: 'fr', label: 'Français', flag: '🇫🇷' },
-  { code: 'en', label: 'English', flag: '🇬🇧' },
-])
-const { locale } = useI18n()
-const filteredLanguages = computed(() => languages.value.filter(l => l.code !== String(locale.value)))
-function getFlag(code) {
-  const l = languages.value.find(x => x.code === String(code))
-  return l ? l.flag : '🌐'
-}
-
+const mainCanvasRef = ref(null)
 const showResetModal = ref(false)
 const isImporting = ref(false)
 let copiedImage = null
@@ -254,18 +139,53 @@ const defaultPatternSnapshot = ref(null)
 
 // --- Functions ---
 
-function setImageRef(i, el) {
-  imageRefs.value[i] = el
-  // Cache node once mounted for faster redraws
-  nextTick(() => cacheImageNode(i))
+function handleCanvasTransformEnd({ index, event }) {
+  const node = event.target
+  const sx = node.scaleX()
+  const sy = node.scaleY()
+  const signX = sx < 0 ? -1 : 1
+  const signY = sy < 0 ? -1 : 1
+  const scaledWidth = Math.max(30, node.width() * Math.abs(sx))
+  const scaledHeight = Math.max(30, node.height() * Math.abs(sy))
+  const x = node.x()
+  const y = node.y()
+
+  canvasImages.value[index].width = scaledWidth
+  canvasImages.value[index].height = scaledHeight
+  canvasImages.value[index].rotation = node.rotation()
+  canvasImages.value[index].x = x
+  canvasImages.value[index].y = y
+  canvasImages.value[index].centerX = x
+  canvasImages.value[index].centerY = y
+  canvasImages.value[index].scaleX = signX
+  canvasImages.value[index].scaleY = signY
+  node.scaleX(signX)
+  node.scaleY(signY)
+
+  const img = canvasImages.value[index]
+  if (img.maskPrimary || img.maskSecondary || img.maskTertiary) {
+    nextTick(() => applyEmblemMask(index))
+  } else if (img.srcEl) {
+    canvasImages.value[index].el = img.srcEl
+    nextTick(() => cacheImageNode(index))
+  }
 }
 
-// Cache a single image node (safe to call multiple times)
+function handleCanvasDragEnd({ index }) {
+  const img = canvasImages.value[index]
+  if (!img) return
+  if (img.maskPrimary || img.maskSecondary || img.maskTertiary) {
+    nextTick(() => applyEmblemMask(index))
+  } else if (img.srcEl) {
+    canvasImages.value[index].el = img.srcEl
+    nextTick(() => cacheImageNode(index))
+  }
+}
+
 function cacheImageNode(i) {
-  const node = imageRefs.value[i]?.getNode?.()
+  const node = mainCanvasRef.value?.imageRefs?.[i]?.getNode?.()
   if (!node) return
   try {
-    // Cache at 1x to limit memory; we don't need hit cache
     node.cache({ pixelRatio: 1 })
     node.drawHitFromCache(false)
     node.getLayer()?.batchDraw?.()
@@ -286,50 +206,8 @@ function setPattern(patternEl, filename) {
   overridePatternAllColors()
 }
 
-function limitBox(oldBox, newBox) {
-  if (newBox.width < 30 || newBox.height < 30) return oldBox
-  return newBox
-}
-
-function onTransformEnd(i, e) {
-  const node = e.target
-  // preserve flip sign while baking scale into width/height
-  const sx = node.scaleX()
-  const sy = node.scaleY()
-  const signX = sx < 0 ? -1 : 1
-  const signY = sy < 0 ? -1 : 1
-  const scaledWidth = Math.max(30, node.width() * Math.abs(sx))
-  const scaledHeight = Math.max(30, node.height() * Math.abs(sy))
-  const x = node.x()
-  const y = node.y()
-
-  canvasImages.value[i].width = scaledWidth
-  canvasImages.value[i].height = scaledHeight
-  canvasImages.value[i].rotation = node.rotation()
-  canvasImages.value[i].x = x
-  canvasImages.value[i].y = y
-  canvasImages.value[i].centerX = x
-  canvasImages.value[i].centerY = y
-  // keep flip after resize; scale magnitude baked into width/height
-  canvasImages.value[i].scaleX = signX
-  canvasImages.value[i].scaleY = signY
-  node.scaleX(signX)
-  node.scaleY(signY)
-
-  // Recompute mask after resize/rotate (transformer)
-  const img = canvasImages.value[i]
-  if (img.maskPrimary || img.maskSecondary || img.maskTertiary) {
-    nextTick(() => applyEmblemMask(i))
-  } else if (img.srcEl) {
-    // ensure we display the unmasked source if no mask is active
-    canvasImages.value[i].el = img.srcEl
-    nextTick(() => cacheImageNode(i))
-  }
-}
-
 function removeImage(i) {
   canvasImages.value.splice(i, 1)
-  imageRefs.value.splice(i, 1)
   if (selectedIndex.value === i) {
     selectedIndex.value = null
   } else if (selectedIndex.value > i) {
@@ -367,28 +245,6 @@ function onLayerDrop(targetIdx) {
   }
 }
 
-function onImageDragEnd(i, e) {
-  const node = e.target
-  const scaledWidth = node.width() * node.scaleX()
-  const scaledHeight = node.height() * node.scaleY()
-  const absCenter = node.getAbsoluteTransform().point({
-    x: scaledWidth / 2,
-    y: scaledHeight / 2,
-  })
-  canvasImages.value[i].x = node.x()
-  canvasImages.value[i].y = node.y()
-  canvasImages.value[i].centerX = absCenter.x
-  canvasImages.value[i].centerY = absCenter.y
-  // Recompute mask after drag
-  const img = canvasImages.value[i]
-  if (img.maskPrimary || img.maskSecondary || img.maskTertiary) {
-    nextTick(() => applyEmblemMask(i))
-  } else if (img.srcEl) {
-    canvasImages.value[i].el = img.srcEl
-    nextTick(() => cacheImageNode(i))
-  }
-}
-
 function copyExportToClipboard() {
   nextTick(() => {
     const textarea = document.querySelector('textarea[readonly]')
@@ -419,11 +275,6 @@ function addImage(imgObj) {
   imgObj.scaleX = typeof imgObj.scaleX === 'number' ? imgObj.scaleX : 1
   imgObj.scaleY = typeof imgObj.scaleY === 'number' ? imgObj.scaleY : 1
   canvasImages.value.push(imgObj)
-}
-
-function onCanvasDragOver(e) {
-  // Allow drop on the canvas (otherwise some browsers ignore the drop event)
-  e.preventDefault()
 }
 
 function handleSidebarDrop(e) {
@@ -462,120 +313,6 @@ function handleSidebarDrop(e) {
   nextTick(() => {
     selectedIndex.value = canvasImages.value.length - 1
   })
-}
-
-// List sorted by depth (desc -> drawn first, thus behind)
-const renderList = computed(() => {
-  const list = canvasImages.value
-    .map((img, idx) => ({ img, idx }))
-    .sort((a, b) => {
-      const da = Number(a.img.depth ?? 0)
-      const db = Number(b.img.depth ?? 0)
-      if (db !== da) return db - da
-      return a.idx - b.idx
-    })
-  return list
-})
-
-// Pprecise hit-test selection without Konva hit graph
-function isPointInEmblem(img, px, py) {
-  const cx = img.x
-  const cy = img.y
-  const theta = (img.rotation || 0) * Math.PI / 180
-  const cosT = Math.cos(theta)
-  const sinT = Math.sin(theta)
-  const sx = Math.abs(img.scaleX ?? 1)
-  const sy = Math.abs(img.scaleY ?? 1)
-  const halfW = (img.width * sx) / 2
-  const halfH = (img.height * sy) / 2
-
-  const dx = px - cx
-  const dy = py - cy
-  const lx = dx * cosT + dy * sinT
-  const ly = -dx * sinT + dy * cosT
-
-  return Math.abs(lx) <= halfW && Math.abs(ly) <= halfH
-}
-
-const dragState = ref({ idx: null, startX: 0, startY: 0, imgStartX: 0, imgStartY: 0 })
-
-function onStageMouseDown(e) {
-  // Ignore clicks on transformer or its anchors -> let Konva handle resize/rotate
-  if (isTransformerTarget(e?.target)) return
-
-  const stage = stageRef.value?.getNode?.()
-  if (!stage) return
-  const pos = stage.getPointerPosition()
-  if (!pos) return
-
-  // If click is inside the currently selected emblem, drag it regardless of stacking
-  const current = selectedIndex.value
-  let picked = null
-  if (current !== null) {
-    const selImg = canvasImages.value[current]
-    if (selImg && isPointInEmblem(selImg, pos.x, pos.y)) {
-      picked = current
-    }
-  }
-
-  // Otherwise, pick top-most under cursor and update selection
-  if (picked === null) {
-    const list = renderList.value
-    for (let i = list.length - 1; i >= 0; i--) {
-      const { img, idx } = list[i]
-      if (isPointInEmblem(img, pos.x, pos.y)) {
-        picked = idx
-        break
-      }
-    }
-    selectedIndex.value = picked === null ? null : picked
-  }
-
-  // Begin manual drag only if an emblem was picked (left button)
-  if (picked !== null && (!e?.evt || e.evt.button === 0)) {
-    const img = canvasImages.value[picked]
-    dragState.value = {
-      idx: picked,
-      startX: pos.x,
-      startY: pos.y,
-      imgStartX: img.x,
-      imgStartY: img.y
-    }
-  }
-}
-
-function onStageMouseMove() {
-  const stage = stageRef.value?.getNode?.()
-  if (!stage) return
-  const ds = dragState.value
-  if (ds.idx === null) return
-  const pos = stage.getPointerPosition()
-  if (!pos) return
-
-  const dx = pos.x - ds.startX
-  const dy = pos.y - ds.startY
-  const i = ds.idx
-  const img = canvasImages.value[i]
-  img.x = ds.imgStartX + dx
-  img.y = ds.imgStartY + dy
-  img.centerX = img.x
-  img.centerY = img.y
-}
-
-function onStageMouseUp() {
-  const ds = dragState.value
-  if (ds.idx === null) return
-  const i = ds.idx
-  dragState.value = { idx: null, startX: 0, startY: 0, imgStartX: 0, imgStartY: 0 }
-
-  const img = canvasImages.value[i]
-  if (!img) return
-  if (img.maskPrimary || img.maskSecondary || img.maskTertiary) {
-    nextTick(() => applyEmblemMask(i))
-  } else if (img.srcEl) {
-    canvasImages.value[i].el = img.srcEl
-    nextTick(() => cacheImageNode(i))
-  }
 }
 
 // Add a function to recolor an emblem image according to its colors
@@ -668,10 +405,10 @@ function handleUpdateEmblemColor({ layerId, colors }) {
 function handleUpdateEmblemRotation({ layerId, rotation }) {
   const idx = canvasImages.value.findIndex(img => img.id === layerId)
   if (idx !== -1) {
-    const node = imageRefs.value[idx]?.getNode?.()
+    const node = mainCanvasRef.value?.imageRefs?.[idx]?.getNode?.()
     if (node) {
       node.rotation(rotation)
-      onTransformEnd(idx, { target: node })
+      handleCanvasTransformEnd({ index: idx, event: { target: node } })
     }
     const img = canvasImages.value[idx]
     if (img.maskPrimary || img.maskSecondary || img.maskTertiary) {
@@ -745,8 +482,8 @@ function handleSetEmblemMask({ layerId, maskPrimary, maskSecondary, maskTertiary
 
 function handleFlipHorizontal({ layerId }) {
   const idx = canvasImages.value.findIndex(img => img.id === layerId)
-  if (idx !== -1 && imageRefs.value[idx]?.getNode) {
-    const node = imageRefs.value[idx].getNode()
+  if (idx !== -1 && mainCanvasRef.value?.imageRefs?.[idx]?.getNode) {
+    const node = mainCanvasRef.value.imageRefs[idx].getNode()
     // Flip around center to avoid offset shift
     node.offsetX(node.width() / 2)
     node.offsetY(node.height() / 2)
@@ -758,8 +495,8 @@ function handleFlipHorizontal({ layerId }) {
 
 function handleFlipVertical({ layerId }) {
   const idx = canvasImages.value.findIndex(img => img.id === layerId)
-  if (idx !== -1 && imageRefs.value[idx]?.getNode) {
-    const node = imageRefs.value[idx].getNode()
+  if (idx !== -1 && mainCanvasRef.value?.imageRefs?.[idx]?.getNode) {
+    const node = mainCanvasRef.value.imageRefs[idx].getNode()
     // Flip around center to avoid offset shift
     node.offsetX(node.width() / 2)
     node.offsetY(node.height() / 2)
@@ -1011,26 +748,11 @@ watch(miniatureDeps, () => {
 })
 
 function updateMiniatureImage() {
-  // Do not toggle selectedIndex; hide the Transformer imperatively to avoid an extra render
   nextTick(() => {
-    const stage = stageRef.value?.getNode?.()
-    if (stage) {
-      const trNode = transformerRef.value?.getNode?.()
-      let prevVisible
-      if (trNode && typeof trNode.visible === 'function') {
-        prevVisible = trNode.visible()
-        trNode.visible(false)
-        stage.batchDraw()
-      }
-
-      // Simplified snapshot without perf metrics
-      const canvas = stage.toCanvas()
-      const dataUrl = canvas.toDataURL()
-      miniatureImage.value = dataUrl
-
-      if (trNode && typeof trNode.visible === 'function') {
-        trNode.visible(prevVisible)
-        stage.batchDraw()
+    if (mainCanvasRef.value?.updateMiniature) {
+      const dataUrl = mainCanvasRef.value.updateMiniature()
+      if (dataUrl) {
+        miniatureImage.value = dataUrl
       }
     }
   })
@@ -1203,7 +925,6 @@ function confirmResetEmblem() {
   // clear selection and layers
   selectedIndex.value = null
   canvasImages.value = []
-  imageRefs.value = []
 
   // restore default pattern colors
   patternColors.value = [...defaultPatternColors]
@@ -1275,22 +996,6 @@ function pasteCopiedImageWithPerf() {
     }
   })
 }
-
-// helper to detect clicks on the Transformer or its anchors
-function isTransformerTarget(konvaTarget) {
-  const tr = transformerRef.value?.getNode?.()
-  if (!tr || !konvaTarget) return false
-  if (konvaTarget === tr) return true
-  // anchors are children of the transformer
-  if (typeof tr.isAncestorOf === 'function' && tr.isAncestorOf(konvaTarget)) return true
-  // also handle ancestor chain manually if needed
-  let p = konvaTarget.getParent?.()
-  while (p) {
-    if (p === tr) return true
-    p = p.getParent?.()
-  }
-  return false
-}
 </script>
 
 <style scoped>
@@ -1341,58 +1046,6 @@ function isTransformerTarget(konvaTarget) {
   height: 100vh;
   position: relative;
 }
-
-.toolbar-row {
-  position: absolute;
-  top: 0;
-  left: 0;
-  z-index: 10;
-  padding: 16px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-}
-
-.canvas-box {
-  width: 400px;
-  height: 400px;
-  background: white;
-  outline: 6px solid #ccb115;
-}
-.lang-switcher {
-  margin-left: auto;
-  position: relative;
-}
-.lang-flag {
-  font-size: 20px;
-  line-height: 1;
-}
-.lang-menu {
-  position: absolute;
-  top: 36px;
-  left: 0;
-  background: #fff;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  box-shadow: 0 2px 8px #0002;
-  min-width: 140px;
-  z-index: 100;
-}
-.lang-menu-item {
-  background: none;
-  border: none;
-  width: 100%;
-  padding: 6px 10px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.lang-menu-item:hover {
-  background: #f5f5f5;
-}
-.icon-left-gap { margin-right: 6px; }
 
 /* Reset confirmation modal */
 .modal-backdrop {
