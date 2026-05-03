@@ -1,7 +1,7 @@
 <template>
   <div>
     <h3>{{ $t('layers') }}</h3>
-    <div style="max-height: 80vh; position: relative" ref="layersContainer">
+    <div class="layers-container" ref="layersContainer">
       <div
         v-for="({ img, idx }, i) in sortedLayers"
         :key="img.id"
@@ -638,6 +638,12 @@ watch(locale, async () => {
 </script>
 
 <style scoped>
+.layers-container {
+  max-height: 80vh;
+  position: relative;
+  padding-right: 8px;
+}
+
 .layerContainer {
   display: flex;
   flex-direction: column;
