@@ -282,6 +282,7 @@ watch(selectedPatternIndex, (i) => {
   display: flex;
   flex-direction: column;
   padding-bottom: 16px;
+  padding-left: 8px;
 }
 
 .sidebar-accordion {
@@ -320,7 +321,7 @@ watch(selectedPatternIndex, (i) => {
 }
 
 .text-emblem-usage {
-  margin-bottom: 0;
+  margin-bottom: 0.3rem;
   font-style: italic;
   font-size: 14px;
   padding-left: 12px;
