@@ -39,7 +39,6 @@
             style="width: 32px; height: 32px; object-fit: contain; margin-right: 10px"
           />
           <span style="flex: 1; display: flex; align-items: center;">
-            {{ $t('layer') }} {{ idx + 1 }}
             <div
               class="d-flex align-items-center"
               style="gap: 8px; margin-left: 40px;"
