@@ -1,15 +1,23 @@
 <template>
   <div>
     <h3>{{ $t('layers') }}</h3>
-    <div style="max-height: 80vh">
+    <div style="max-height: 80vh; position: relative" ref="layersContainer">
       <div
         v-for="({ img, idx }, i) in sortedLayers"
         :key="img.id"
         class="layerContainer"
+        :class="{
+          'is-dragging': draggedIndex === i,
+          'shift-down': shouldShiftDown(i),
+          'shift-up': shouldShiftUp(i),
+        }"
         :style="{
           border: selectedIndex === idx ? '2px solid #0078d4' : '1px solid #ccc',
           background: selectedIndex === idx ? '#e6f0fa' : '#fff',
         }"
+        @dragover="onDragOver($event)"
+        @dragenter.prevent="onDragEnter"
+        @dragleave="onDragLeave"
       >
         <div
           class="layerHeader"
@@ -19,9 +27,7 @@
           <!-- Drag handle -->
           <span
             draggable="true"
-            @dragstart="onNativeDragStart($event, idx)"
-            @dragover.prevent
-            @drop="$emit('drop', idx)"
+            @dragstart="onNativeDragStart($event, idx, i)"
             @dragend="onNativeDragEnd"
             style="cursor: grab; display: flex; align-items: center; margin-right: 8px; margin-left: 8px"
             :title="$t('move_layer')"
@@ -231,7 +237,7 @@
 
 <script setup>
 import { ref, watch, computed, onMounted, onUpdated, onBeforeUnmount, nextTick } from 'vue'
-import { NInputNumber, NCheckbox, NButton, NButtonGroup } from 'naive-ui'
+import { NInputNumber, NCheckbox, NButton } from 'naive-ui'
 import emblemsData from '../assets/emblems.json'
 import CustomColorPicker from './CustomColorPicker.vue'
 import { Tooltip } from 'bootstrap'
@@ -264,6 +270,13 @@ const layerPos = ref({})
 const layerStretch = ref({})
 const layerMask = ref({})
 const isStretchedAndRotated = ref({})
+const layersContainer = ref(null)
+const draggedIndex = ref(null)
+const dropTargetIndex = ref(null)
+const dragPreviewEl = ref(null)
+const dragPreviewContainer = ref(null)
+let containerRect = null
+let layerRects = []
 
 function getLayerColorCount(filename) {
   const info = emblemsData[filename]
@@ -443,47 +456,148 @@ watch(
   { immediate: true, deep: true }
 )
 
-const dragPreviewEl = ref(null)
+function shouldShiftDown(i) {
+  if (draggedIndex.value === null || dropTargetIndex.value === null) return false
+  if (draggedIndex.value > dropTargetIndex.value) {
+    return i >= dropTargetIndex.value && i < draggedIndex.value
+  }
+  return false
+}
 
-function onNativeDragStart(e, idx) {
-  // Preserve legacy event with same parameter
+function shouldShiftUp(i) {
+  if (draggedIndex.value === null || dropTargetIndex.value === null) return false
+  if (draggedIndex.value < dropTargetIndex.value) {
+    return i > draggedIndex.value && i <= dropTargetIndex.value
+  }
+  return false
+}
+
+function onNativeDragStart(e, idx, sortedIdx) {
+  draggedIndex.value = sortedIdx
+  dropTargetIndex.value = sortedIdx
   emit('dragstart', idx)
+
+  if (!layersContainer.value || !e.dataTransfer) return
+
+  // Store container and layer positions
+  containerRect = layersContainer.value.getBoundingClientRect()
+  layerRects = Array.from(layersContainer.value.querySelectorAll('.layerContainer')).map(el => {
+    const rect = el.getBoundingClientRect()
+    return {
+      top: rect.top - containerRect.top,
+      bottom: rect.bottom - containerRect.top,
+      height: rect.height,
+      center: rect.top + rect.height / 2 - containerRect.top
+    }
+  })
 
   try {
     const container = e.currentTarget?.closest('.layerContainer')
-    if (!container || !e.dataTransfer) return
+    if (!container) return
     const rect = container.getBoundingClientRect()
 
-    // Create a clone and style it
+    // Create a visual preview that stays horizontally fixed
     const clone = container.cloneNode(true)
-    clone.style.opacity = '0.6'
+    clone.style.opacity = '0.8'
     clone.style.pointerEvents = 'none'
     clone.style.position = 'fixed'
-    clone.style.top = '-1000px'
-    clone.style.left = '-1000px'
-    clone.style.zIndex = '9999'
     clone.style.width = rect.width + 'px'
     clone.style.height = rect.height + 'px'
-    document.body.appendChild(clone)
+    clone.style.zIndex = '10000'
+    clone.style.backgroundColor = '#fff'
+    clone.style.boxShadow = '0 4px 12px rgba(0,0,0,0.3)'
+    clone.style.borderRadius = '4px'
+
+    // Position it at the container's horizontal position
+    clone.style.left = rect.left + 'px'
+    clone.style.top = '-10000px' // Off-screen initially
+
+    // Create a wrapper to hold the preview
+    const wrapper = document.createElement('div')
+    wrapper.style.position = 'fixed'
+    wrapper.style.pointerEvents = 'none'
+    wrapper.style.zIndex = '10000'
+    wrapper.appendChild(clone)
+    document.body.appendChild(wrapper)
+
+    dragPreviewContainer.value = wrapper
     dragPreviewEl.value = clone
 
-    // Compute cursor offset within the original element
-    const offsetX = Math.max(0, Math.min(rect.width, e.clientX - rect.left))
-    const offsetY = Math.max(0, Math.min(rect.height, e.clientY - rect.top))
-
     e.dataTransfer.effectAllowed = 'move'
-    // Set the clone as the drag image so it follows the cursor
-    e.dataTransfer.setDragImage(clone, offsetX, offsetY)
-  } catch {
-    // no-op if setDragImage not supported
+    // Use invisible drag image
+    const emptyImg = document.createElement('img')
+    emptyImg.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'
+    e.dataTransfer.setDragImage(emptyImg, 0, 0)
+  } catch (err) {
+    console.error('Drag start error:', err)
   }
 }
 
-function onNativeDragEnd() {
-  if (dragPreviewEl.value && dragPreviewEl.value.parentNode) {
-    dragPreviewEl.value.parentNode.removeChild(dragPreviewEl.value)
+function onDragOver(e) {
+  e.preventDefault()
+  e.dataTransfer.dropEffect = 'move'
+
+  if (draggedIndex.value === null) return
+
+  if (dragPreviewEl.value && containerRect) {
+    const mouseY = e.clientY
+    dragPreviewEl.value.style.top = mouseY - 20 + 'px' // 20px offset for better visual
   }
+
+  // Calculate drop target based on mouse position
+  if (!layerRects.length || !containerRect) return
+
+  const mouseY = e.clientY - containerRect.top
+
+  let targetIndex = draggedIndex.value
+
+  let minDistance = Infinity
+
+  for (let j = 0; j < layerRects.length; j++) {
+    const rect = layerRects[j]
+
+    // Calculer la distance à partir du milieu de chaque élément
+    const elementCenter = rect.top + rect.height / 2
+    const distance = Math.abs(mouseY - elementCenter)
+
+    if (distance < minDistance) {
+      minDistance = distance
+      targetIndex = j
+    }
+  }
+
+  dropTargetIndex.value = targetIndex
+}
+
+function onDragEnter() {
+  // Prevent default to allow drop
+}
+
+function onDragLeave() {
+  // Keep drop target highlighted
+}
+
+function onNativeDragEnd() {
+  // Perform the actual drop
+  if (draggedIndex.value !== null && dropTargetIndex.value !== null && draggedIndex.value !== dropTargetIndex.value) {
+    // Get the actual layer index (not sorted index)
+    const targetLayer = sortedLayers.value[dropTargetIndex.value]
+
+    if (targetLayer) {
+      emit('drop', targetLayer.idx)
+    }
+  }
+
+  // Cleanup
+  if (dragPreviewContainer.value && dragPreviewContainer.value.parentNode) {
+    dragPreviewContainer.value.parentNode.removeChild(dragPreviewContainer.value)
+  }
+  dragPreviewContainer.value = null
   dragPreviewEl.value = null
+  draggedIndex.value = null
+  dropTargetIndex.value = null
+  containerRect = null
+  layerRects = []
 }
 
 // Bootstrap tooltips lifecycle
@@ -530,7 +644,22 @@ watch(locale, async () => {
   align-items: stretch;
   margin-bottom: 6px;
   cursor: 'pointer';
+  transition: transform 0.2s ease, opacity 0.2s ease;
+  position: relative;
 }
+
+.layerContainer.is-dragging {
+  opacity: 0.3;
+}
+
+.layerContainer.shift-down {
+  transform: translateY(calc(100% + 6px));
+}
+
+.layerContainer.shift-up {
+  transform: translateY(calc(-100% - 6px));
+}
+
 .layerHeader {
   padding-top: 6px;
   padding-bottom: 6px;
